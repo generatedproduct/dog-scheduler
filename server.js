@@ -92,12 +92,35 @@ async function listAppointments() {
   });
   const client = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: client });
+  // Retrieve columns A through H (status is column H)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    // Fetch up to column G to include payment method and notes
-    range: `${sheetName}!A2:G`,
+    range: `${sheetName}!A2:H`,
   });
   return response.data.values || [];
+}
+
+// Helper to update the status column for a given row
+async function updateStatus(rowIndex, status) {
+  const spreadsheetId = process.env.SPREADSHEET_ID;
+  const sheetName = process.env.SHEET_NAME || 'Sheet1';
+  if (!spreadsheetId) {
+    throw new Error('SPREADSHEET_ID environment variable is not set');
+  }
+  const auth = new google.auth.GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+  const client = await auth.getClient();
+  const sheets = google.sheets({ version: 'v4', auth: client });
+  // Status column is H. RowIndex is zero‑based relative to first data row (A2). Add 2 to convert to sheet row number.
+  const rowNumber = rowIndex + 2;
+  const range = `${sheetName}!H${rowNumber}`;
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range,
+    valueInputOption: 'USER_ENTERED',
+    resource: { values: [[status]] },
+  });
 }
 
 // POST endpoint to handle form submission
@@ -140,21 +163,41 @@ app.get('/appointments', async (req, res) => {
         <th>Address</th>
         <th>First Time</th>
         <th>Payment</th>
-        <th>Notes</th>
-      </tr>
-    </thead>
-    <tbody>`;
-    for (const row of rows) {
-      html += '<tr>';
-      html += `<td>${row[0] || ''}</td>`;
-      html += `<td>${row[1] || ''}</td>`;
-      html += `<td>${row[2] || ''}</td>`;
-      html += `<td>${row[3] || ''}</td>`;
-      html += `<td>${row[4] || ''}</td>`;
-      html += `<td>${row[5] || ''}</td>`;
-      html += `<td>${row[6] || ''}</td>`;
-      html += '</tr>';
-    }
+           <th>Notes</th>
+           <th>Status</th>
+           <th>Actions</th>
+           </tr>
+         </thead>
+         <tbody>`;
+        rows.forEach((row, i) => {
+          html += '<tr>';
+          html += `<td>${row[0] || ''}</td>`;
+          html += `<td>${row[1] || ''}</td>`;
+          html += `<td>${row[2] || ''}</td>`;
+          html += `<td>${row[3] || ''}</td>`;
+          html += `<td>${row[4] || ''}</td>`;
+          html += `<td>${row[5] || ''}</td>`;
+          html += `<td>${row[6] || ''}</td>`;
+          const status = row[7] || '';
+          html += `<td>${status}</td>`;
+          if (!status) {
+            html += '<td>';
+            html += `<form method="POST" action="/appointments/status" style="display:inline; margin-right:4px;">
+                        <input type="hidden" name="rowIndex" value="${i}" />
+                        <input type="hidden" name="status" value="Accepted" />
+                        <button type="submit">Accept</button>
+                      </form>`;
+            html += `<form method="POST" action="/appointments/status" style="display:inline;">
+                        <input type="hidden" name="rowIndex" value="${i}" />
+                        <input type="hidden" name="status" value="Declined" />
+                        <button type="submit">Decline</button>
+                      </form>`;
+            html += '</td>';
+          } else {
+            html += '<td></td>';
+          }
+          html += '</tr>';
+        });
     html += `</tbody>
   </table>
   <p><a href="/index.html">Back to schedule form</a></p>
@@ -167,6 +210,25 @@ app.get('/appointments', async (req, res) => {
   }
 });
 
+// POST endpoint to accept or decline an appointment
+// Expects `rowIndex` (zero‑based) and `status` (e.g. "Accepted" or "Declined") in the request body
+app.post('/appointments/status', async (req, res) => {
+  try {
+    const { rowIndex, status } = req.body;
+    if (rowIndex === undefined || !status) {
+      return res.status(400).send('Missing rowIndex or status');
+    }
+    const index = parseInt(rowIndex, 10);
+    if (isNaN(index)) {
+      return res.status(400).send('Invalid rowIndex');
+    }
+    await updateStatus(index, status);
+    return res.redirect('/appointments');
+  } catch (err) {
+    console.error('Error updating status:', err);
+    return res.status(500).send('Unable to update status');
+  }
+});
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
