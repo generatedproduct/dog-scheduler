@@ -1,0 +1,139 @@
+/*
+ * Global styling for the dog scheduling app.
+ * The light-blue color scheme avoids green and is defined in the
+ * `--primary-color` custom property. The `background-color` CSS
+ * property sets the background color of an element and is used
+ * throughout this file to establish the look and feel【325094776564910†L1278-L1342】.
+ */
+
+:root {
+  --primary-color: #e0f7fa; /* pale cyan/light blue */
+  --accent-color: #0288d1; /* medium blue for buttons */
+  --text-color: #0d47a1; /* dark blue for headings */
+  --border-radius: 4px;
+  --padding: 10px;
+  --margin-bottom: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+header {
+  background-color: var(--accent-color);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h1 {
+  margin: 0;
+}
+
+main {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.appointment-form .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--margin-bottom);
+}
+
+.appointment-form label {
+  margin-bottom: 0.25rem;
+  font-weight: bold;
+}
+
+.appointment-form input[type="text"],
+.appointment-form input[type="date"],
+.appointment-form input[type="time"] {
+  padding: var(--padding);
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+}
+
+.radio-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-actions {
+  text-align: right;
+}
+
+.form-actions button {
+  background-color: var(--accent-color);
+  border: none;
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.form-actions button:hover {
+  background-color: #0277bd;
+}
+
+.view-appointments {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.view-appointments a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Admin appointments table */
+body.admin {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  font-family: Arial, sans-serif;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  margin-top: 1rem;
+}
+
+table th, table td {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+table th {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.thankyou {
+  max-width: 500px;
+  margin: 100px auto;
+  text-align: center;
+  background-color: white;
+  padding: 40px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.thankyou h1 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
